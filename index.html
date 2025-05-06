@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Conhecimento</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Quiz de Conhecimento</h1>
+        
+        <div class="setup-section" id="setup-section">
+            <div class="form-group">
+                <label for="tema">Escolha um tema:</label>
+                <input type="text" id="tema" placeholder="Ex: História do Brasil, Matemática, Ciências...">
+            </div>
+            
+            <div class="level-info">
+                <p>Nível atual: <span id="nivel">1</span></p>
+                <p class="level-description">Você começará no nível 1. A cada acerto, você avança um nível. Se errar, volta ao nível 1.</p>
+            </div>
+            
+            <button id="start-btn">Começar Quiz</button>
+        </div>
+        
+        <div class="quiz-section" id="quiz-section" style="display: none;">
+            <div class="level-display">Nível: <span id="current-level">1</span></div>
+            <div class="tema-display">Tema: <span id="current-tema"></span></div>
+            
+            <div class="question-card">
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Gerando pergunta...</p>
+                </div>
+                
+                <div id="question-content" style="display: none;">
+                    <h2 id="question-text">Pergunta aparecerá aqui</h2>
+                    
+                    <div class="options-container">
+                        <button class="option-btn" id="option0"></button>
+                        <button class="option-btn" id="option1"></button>
+                        <button class="option-btn" id="option2"></button>
+                        <button class="option-btn" id="option3"></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="result-feedback" id="feedback" style="display: none;">
+                <p id="feedback-text"></p>
+                <button id="next-btn">Próxima Pergunta</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
