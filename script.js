@@ -20,9 +20,7 @@ const feedbackText = document.getElementById('feedback-text');
 const nextBtn = document.getElementById('next-btn');
 
 // Configuração da API
-const API_KEY = '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';
-const MODEL = 'anthropic/claude-3-5-haiku';
-const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const API_URL = 'http://localhost:3000/api/generate-question';
 
 // Estado do jogo
 let currentLevel = 1;
@@ -72,40 +70,15 @@ async function generateQuestion() {
     questionContent.style.display = 'none';
     
     try {
-        const prompt = `Você é um gerador de perguntas de quiz. 
-        Crie uma pergunta de múltipla escolha sobre o tema "${currentTema}" com nível de dificuldade ${currentLevel} (em uma escala de 1 a 100, onde 1 é muito fácil e 100 é extremamente difícil).
-        
-        Forneça a pergunta e exatamente 4 alternativas, sendo apenas 1 correta.
-        
-        Responda no seguinte formato JSON:
-        {
-            "pergunta": "Texto da pergunta aqui",
-            "alternativas": [
-                "Alternativa A",
-                "Alternativa B",
-                "Alternativa C",
-                "Alternativa D"
-            ],
-            "indiceCorreta": 0 // índice da alternativa correta (0 a 3)
-        }
-        
-        Não inclua nenhum texto adicional além do JSON.`;
         
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_KEY}`,
-                'HTTP-Referer': window.location.href
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: MODEL,
-                messages: [
-                    {
-                        role: 'user',
-                        content: prompt
-                    }
-                ]
+                tema: currentTema,
+                nivel: currentLevel
             })
         });
         
@@ -114,15 +87,30 @@ async function generateQuestion() {
         }
         
         const data = await response.json();
-        const content = data.choices[0].message.content;
         
-        // Extrair o JSON da resposta
-        let jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-            throw new Error('Formato de resposta inválido');
+        // Verificar se recebemos uma pergunta de fallback devido a erro
+        if (data.mockQuestion && data.pergunta) {
+            currentQuestion = data.pergunta;
+            console.log('Usando pergunta de fallback devido a erro na API');
+        } else if (data.choices && data.choices[0] && data.choices[0].message) {
+            // Resposta normal da API
+            const content = data.choices[0].message.content;
+            
+            // Extrair o JSON da resposta
+            let jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) {
+                throw new Error('Formato de resposta inválido');
+            }
+            
+            try {
+                currentQuestion = JSON.parse(jsonMatch[0]);
+            } catch (jsonError) {
+                console.error('Erro ao analisar JSON:', jsonError);
+                throw new Error('Erro ao processar resposta da API');
+            }
+        } else {
+            throw new Error('Formato de resposta inesperado');
         }
-        
-        currentQuestion = JSON.parse(jsonMatch[0]);
         
         // Exibir a pergunta e as alternativas
         questionText.textContent = currentQuestion.pergunta;
