@@ -19,8 +19,8 @@ const feedbackElement = document.getElementById('feedback');
 const feedbackText = document.getElementById('feedback-text');
 const nextBtn = document.getElementById('next-btn');
 
-// Configuração da API - URL relativa para funcionar tanto localmente quanto na Vercel
-const API_URL = '/api/generate-question';
+// Configuração da API
+const API_URL = 'http://localhost:3000/api/generate-questions';
 
 // Estado do jogo
 let currentLevel = 1;
@@ -64,76 +64,81 @@ function updateLevelDisplay() {
 
 // Função para gerar uma nova pergunta
 async function generateQuestion() {
-    // Esconder feedback e mostrar loading
-    feedbackElement.style.display = 'none';
-    loadingElement.style.display = 'flex';
+    // Se for a primeira pergunta ou se o jogador acertou a anterior
+    if (currentQuestion === null || currentQuestion.feedback === 'correct') {
+        // Aumentar o nível
+        currentLevel = Math.min(currentLevel + 1, 10);
+        updateLevelDisplay();
+    }
+    
+    // Mostrar loading
+    loadingElement.style.display = 'block';
     questionContent.style.display = 'none';
+    feedbackElement.style.display = 'none';
+    nextBtn.disabled = true;
     
     try {
-        console.log(`Enviando requisição para ${API_URL} com tema: ${currentTema}, nível: ${currentLevel}`);
-        
+        // Fazer a requisição para a API
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                tema: currentTema,
-                nivel: currentLevel
+                theme: currentTema,
+                difficulty: currentLevel
             })
         });
         
-        console.log('Resposta recebida:', response.status, response.statusText);
-        
-        // Mesmo que a resposta não seja OK, vamos tentar processar o JSON
-        // para ver se há informações de erro úteis
-        const data = await response.json();
-        console.log('Dados recebidos:', data);
-        
         if (!response.ok) {
-            if (data.error) {
-                console.log('Detalhes do erro:', data.details);
-                console.log('Status code:', data.statusCode);
-                console.log('Dados da resposta do erro:', data.responseData);
-                throw new Error(`Erro na API: ${data.error} - ${data.details || ''}`);
-            } else {
-                throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
-            }
+            const errorData = await response.json();
+            console.error('Erro na resposta da API:', errorData);
+            throw new Error(errorData.error || 'Erro ao gerar pergunta');
         }
         
-        // Processar a resposta da API
-        if (data.choices && data.choices[0] && data.choices[0].message) {
-            // Resposta normal da API
-            const content = data.choices[0].message.content;
-            console.log('Conteúdo da resposta:', content);
-            
-            // Extrair o JSON da resposta
-            let jsonMatch = content.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) {
-                console.error('Não foi possível encontrar JSON na resposta');
-                throw new Error('Não foi possível processar a resposta da API');
-            }
-            
-            try {
-                currentQuestion = JSON.parse(jsonMatch[0]);
-                console.log('Pergunta processada:', currentQuestion);
-            } catch (jsonError) {
-                console.error('Erro ao analisar JSON:', jsonError);
-                throw new Error('Erro ao processar o JSON da resposta da API');
-            }
-        } else {
-            console.error('Formato de resposta inesperado:', data);
-            throw new Error('Formato de resposta da API inesperado');
+        const result = await response.json();
+        console.log('Dados recebidos:', result);
+        
+        // Verificar se a resposta contém os dados necessários
+        if (!result.success || !result.data) {
+            console.error('Formato de resposta inválido:', result);
+            throw new Error('Formato de resposta inválido da API');
         }
         
-        // Exibir a pergunta e as alternativas
+        const data = result.data;
+        
+        if (!data.pergunta || !data.opcoes || !Array.isArray(data.opcoes) || 
+            data.resposta === undefined || data.opcoes[data.resposta] === undefined) {
+            console.error('Formato de pergunta inválido:', data);
+            throw new Error('Formato de pergunta inválido retornado pela API');
+        }
+        
+        // Atualizar a pergunta atual
+        currentQuestion = {
+            pergunta: data.pergunta,
+            alternativas: data.opcoes,
+            respostaCorreta: data.resposta,
+            feedback: ''
+        };
+        
+        // Exibir a pergunta e opções
         questionText.textContent = currentQuestion.pergunta;
-        currentQuestion.alternativas.forEach((alt, index) => {
-            optionBtns[index].textContent = alt;
-            optionBtns[index].className = 'option-btn'; // Resetar classes
+        
+        // Atualizar os botões de opção
+        optionBtns.forEach((btn, index) => {
+            if (index < currentQuestion.alternativas.length) {
+                btn.textContent = currentQuestion.alternativas[index];
+                btn.dataset.index = index;
+                btn.disabled = false;
+                btn.classList.remove('correct', 'incorrect');
+                btn.style.display = 'block';
+            } else {
+                btn.style.display = 'none';
+            }
         });
         
-        correctAnswerIndex = currentQuestion.indiceCorreta;
+        // Definir o índice da resposta correta
+        correctAnswerIndex = currentQuestion.respostaCorreta;
         
         // Esconder loading e mostrar conteúdo
         loadingElement.style.display = 'none';
