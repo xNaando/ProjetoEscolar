@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
-const https = require('https');
 
 const app = express();
 const PORT = 3000;
@@ -30,7 +29,6 @@ app.post('/api/generate-question', async (req, res) => {
   try {
     const { tema, nivel } = req.body;
     
-    // Usando apenas a API para gerar perguntas
     console.log(`Gerando pergunta sobre "${tema}" com nível ${nivel}`);
     
     const openRouterPayload = {
@@ -69,7 +67,7 @@ app.post('/api/generate-question', async (req, res) => {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'http://localhost:3000',
+        'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app',
         'X-Title': 'Quiz Educacional'
       }
     });
