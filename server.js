@@ -32,7 +32,7 @@ app.post('/api/generate-question', async (req, res) => {
     console.log(`Gerando pergunta sobre "${tema}" com nível ${nivel}`);
     
     const openRouterPayload = {
-      model: 'anthropic/claude-3-5-haiku',
+      model: 'anthropic/claude-3-haiku-20240307',
       messages: [
         {
           role: 'user',
@@ -60,9 +60,12 @@ app.post('/api/generate-question', async (req, res) => {
     
     console.log('Enviando requisição para OpenRouter...');
     
-    // Chave de API do OpenRouter - usar variável de ambiente
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    console.log('Usando API key:', apiKey ? 'API key definida' : 'API key não encontrada');
+    // Chave de API do OpenRouter - usar variável de ambiente ou usar a chave direta para testes
+    // Isso é temporário para fins de depuração
+    const apiKey = process.env.OPENROUTER_API_KEY || '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';
+    
+    console.log('Variáveis de ambiente disponíveis:', Object.keys(process.env).join(', '));
+    console.log('Usando API key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'API key não encontrada');
     
     if (!apiKey) {
       throw new Error('OPENROUTER_API_KEY não definida nas variáveis de ambiente');
@@ -84,7 +87,9 @@ app.post('/api/generate-question', async (req, res) => {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${formattedApiKey}`,
       'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app',
-      'X-Title': 'Quiz Educacional'
+      'X-Title': 'Quiz Educacional',
+      'OpenAI-Organization': 'org-123456',  // Valor genérico para teste
+      'User-Agent': 'Projeto Escolar Quiz/1.0.0'
     };
     
     console.log('Enviando requisição para URL:', 'https://openrouter.ai/api/v1/chat/completions');
