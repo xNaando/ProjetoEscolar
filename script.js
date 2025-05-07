@@ -20,7 +20,7 @@ const feedbackText = document.getElementById('feedback-text');
 const nextBtn = document.getElementById('next-btn');
 
 // Configuração da API
-const API_URL = 'http://localhost:3000/api/generate-questions';
+const API_URL = '/api/generate-questions';
 
 // Estado do jogo
 let currentLevel = 1;

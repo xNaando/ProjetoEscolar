@@ -106,7 +106,17 @@ app.post('/api/generate-questions', async (req, res) => {
   }
 });
 
+// Middleware para rotas não encontradas
+app.use((req, res) => {
+  console.log(`Rota não encontrada: ${req.method} ${req.url}`);
+  res.status(404).json({
+    success: false,
+    error: 'Rota não encontrada',
+    path: req.url
+  });
+});
+
 // Iniciar o servidor
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Servidor rodando na porta ${port}`);
 });
