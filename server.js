@@ -60,8 +60,8 @@ app.post('/api/generate-question', async (req, res) => {
     
     console.log('Enviando requisição para OpenRouter...');
     
-    // Chave de API do OpenRouter
-    const apiKey = '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';
+    // Chave de API do OpenRouter - usar variável de ambiente ou fallback para a chave direta
+    const apiKey = process.env.OPENROUTER_API_KEY || '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';
     
     const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', openRouterPayload, {
       headers: {
