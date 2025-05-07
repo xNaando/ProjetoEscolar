@@ -32,7 +32,7 @@ app.post('/api/generate-question', async (req, res) => {
     console.log(`Gerando pergunta sobre "${tema}" com nível ${nivel}`);
     
     const openRouterPayload = {
-      model: 'anthropic/claude-3-haiku-20240307',
+      model: 'openai/gpt-3.5-turbo',
       messages: [
         {
           role: 'user',
@@ -60,36 +60,23 @@ app.post('/api/generate-question', async (req, res) => {
     
     console.log('Enviando requisição para OpenRouter...');
     
-    // Chave de API do OpenRouter - usar variável de ambiente ou usar a chave direta para testes
-    // Isso é temporário para fins de depuração
-    const apiKey = process.env.OPENROUTER_API_KEY || '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';
+    // Usando a chave API diretamente para garantir que funcione
+    const apiKey = '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';
     
-    console.log('Variáveis de ambiente disponíveis:', Object.keys(process.env).join(', '));
-    console.log('Usando API key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'API key não encontrada');
-    
-    if (!apiKey) {
-      throw new Error('OPENROUTER_API_KEY não definida nas variáveis de ambiente');
-    }
+    console.log('Usando chave API fixa para garantir funcionamento');
+    console.log('Tamanho da API key:', apiKey.length);
     
     console.log('Headers da requisição:', {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer [OCULTO]',
-      'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app',
-      'X-Title': 'Quiz Educacional'
+      'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app'
     });
     
-    // Garantindo que a chave API está formatada corretamente
-    const formattedApiKey = apiKey.trim();
-    console.log('Tamanho da API key:', formattedApiKey.length);
-    
-    // Montando os headers corretos conforme documentação do OpenRouter
+    // Montando os headers exatamente conforme a documentação oficial do OpenRouter
     const headers = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${formattedApiKey}`,
-      'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app',
-      'X-Title': 'Quiz Educacional',
-      'OpenAI-Organization': 'org-123456',  // Valor genérico para teste
-      'User-Agent': 'Projeto Escolar Quiz/1.0.0'
+      'Authorization': `Bearer ${apiKey}`,
+      'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app'
     };
     
     console.log('Enviando requisição para URL:', 'https://openrouter.ai/api/v1/chat/completions');
