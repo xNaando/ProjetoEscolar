@@ -3,6 +3,7 @@ const { OpenAI } = require('openai');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
+const { pipeline } = require('@xenova/transformers');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -27,11 +28,12 @@ app.get('/', (req, res) => {
 
 // Inicializar o cliente OpenAI com configuração para OpenRouter
 const openai = new OpenAI({
-  apiKey: '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',
+  apiKey: process.env.OPENROUTER_API_KEY || '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',
   baseURL: 'https://openrouter.ai/api/v1',
   defaultHeaders: {
     'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app',
-    'X-Title': 'Quiz Educacional'
+    'X-Title': 'Quiz Educacional',
+    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY || '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'}`
   },
 });
 
@@ -47,6 +49,8 @@ app.post('/api/generate-questions', async (req, res) => {
     console.log('Iniciando geração de perguntas...');
     console.log('Tema:', theme);
     console.log('Dificuldade:', difficulty);
+    console.log('API Key configurada:', openai.apiKey ? 'Sim (primeiros caracteres: ' + openai.apiKey.substring(0, 10) + '...)' : 'Não');
+    console.log('Headers de autenticação:', JSON.stringify(openai.defaultHeaders, null, 2));
 
     const completion = await openai.chat.completions.create({
       model: 'anthropic/claude-3-haiku-20240307',
