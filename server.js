@@ -155,7 +155,17 @@ app.use((req, res) => {
   });
 });
 
+// Rota de teste
+app.get('/api/teste', (req, res) => {
+  res.json({
+    success: true,
+    message: 'API funcionando corretamente!'
+  });
+});
+
 // Iniciar o servidor
 app.listen(port, '0.0.0.0', () => {
   console.log(`Servidor rodando na porta ${port}`);
+  console.log(`Acesse: http://localhost:${port}`);
+  console.log(`API OpenRouter configurada com a chave: ${openai.apiKey.substring(0, 10)}...`);
 });

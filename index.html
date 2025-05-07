@@ -1,58 +1,75 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz de Conhecimento</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <h1>Quiz de Conhecimento</h1>
         
-        <div class="setup-section" id="setup-section">
+        <!-- Seção de configuração -->
+        <div id="setup-section">
+            <h2>Configurar Quiz</h2>
             <div class="form-group">
-                <label for="tema">Escolha um tema:</label>
-                <input type="text" id="tema" placeholder="Ex: História do Brasil, Matemática, Ciências...">
+                <label for="tema">Tema:</label>
+                <input type="text" id="tema" placeholder="Ex: animais, história, ciências...">
             </div>
-            
-            <div class="level-info">
-                <p>Nível atual: <span id="nivel">1</span></p>
-                <p class="level-description">Você começará no nível 1. A cada acerto, você avança um nível. Se errar, volta ao nível 1.</p>
+            <div class="form-group">
+                <label for="difficulty">Dificuldade:</label>
+                <select id="difficulty">
+                    <option value="1">1 - Muito Fácil</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5" selected>5 - Médio</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10 - Muito Difícil</option>
+                </select>
             </div>
-            
-            <button id="start-btn">Começar Quiz</button>
+            <button id="start-btn">Iniciar Quiz</button>
         </div>
         
-        <div class="quiz-section" id="quiz-section" style="display: none;">
-            <div class="level-display">Nível: <span id="current-level">1</span></div>
-            <div class="tema-display">Tema: <span id="current-tema"></span></div>
+        <!-- Seção do quiz -->
+        <div id="quiz-section" style="display: none;">
+            <div class="quiz-info">
+                <p>Tema: <span id="current-tema"></span></p>
+                <p>Nível: <span id="current-level"></span></p>
+                <p>Nível: <span id="nivel"></span></p>
+            </div>
             
-            <div class="question-card">
-                <div id="loading" class="loading">
-                    <div class="spinner"></div>
-                    <p>Gerando pergunta...</p>
-                </div>
-                
-                <div id="question-content" style="display: none;">
-                    <h2 id="question-text">Pergunta aparecerá aqui</h2>
-                    
-                    <div class="options-container">
-                        <button class="option-btn" id="option0"></button>
-                        <button class="option-btn" id="option1"></button>
-                        <button class="option-btn" id="option2"></button>
-                        <button class="option-btn" id="option3"></button>
-                    </div>
+            <!-- Carregamento -->
+            <div id="loading" style="display: none;">
+                <p>Gerando pergunta, por favor aguarde...</p>
+            </div>
+            
+            <!-- Conteúdo da pergunta -->
+            <div id="question-content" style="display: none;">
+                <h3 id="question-text"></h3>
+                <div class="options-container">
+                    <button id="option0" class="option-btn"></button>
+                    <button id="option1" class="option-btn"></button>
+                    <button id="option2" class="option-btn"></button>
+                    <button id="option3" class="option-btn"></button>
                 </div>
             </div>
             
-            <div class="result-feedback" id="feedback" style="display: none;">
+            <!-- Feedback -->
+            <div id="feedback" style="display: none;">
                 <p id="feedback-text"></p>
                 <button id="next-btn">Próxima Pergunta</button>
             </div>
+            
+            <!-- Container para mensagens de erro -->
+            <div id="question-container"></div>
         </div>
     </div>
-
+    
     <script src="script.js"></script>
 </body>
 </html>

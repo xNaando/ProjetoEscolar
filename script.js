@@ -18,6 +18,7 @@ const questionContent = document.getElementById('question-content');
 const feedbackElement = document.getElementById('feedback');
 const feedbackText = document.getElementById('feedback-text');
 const nextBtn = document.getElementById('next-btn');
+const questionContainer = document.getElementById('question-container');
 
 // Configuração da API
 const API_URL = '/api/generate-questions';
@@ -28,17 +29,35 @@ let currentTema = '';
 let currentQuestion = null;
 let correctAnswerIndex = null;
 
-// Inicializar o jogo
-startBtn.addEventListener('click', startQuiz);
-nextBtn.addEventListener('click', generateQuestion);
-
-// Configurar os botões de opção
-optionBtns.forEach((btn, index) => {
-    btn.addEventListener('click', () => checkAnswer(index));
+// Verificar se todos os elementos foram encontrados
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar o jogo
+    if (startBtn) {
+        startBtn.addEventListener('click', startQuiz);
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', generateQuestion);
+    }
+    
+    // Configurar os botões de opção
+    optionBtns.forEach((btn, index) => {
+        if (btn) {
+            btn.addEventListener('click', () => checkAnswer(index));
+        }
+    });
+    
+    // Inicializar o nível
+    updateLevelDisplay();
 });
 
 // Função para iniciar o quiz
 function startQuiz() {
+    if (!temaInput) {
+        console.error('Elemento temaInput não encontrado');
+        return;
+    }
+    
     currentTema = temaInput.value.trim();
     
     if (!currentTema) {
@@ -48,83 +67,132 @@ function startQuiz() {
     
     currentLevel = 1;
     updateLevelDisplay();
-    currentTemaDisplay.textContent = currentTema;
     
-    setupSection.style.display = 'none';
-    quizSection.style.display = 'block';
+    if (currentTemaDisplay) {
+        currentTemaDisplay.textContent = currentTema;
+    }
+    
+    if (setupSection) {
+        setupSection.style.display = 'none';
+    }
+    
+    if (quizSection) {
+        quizSection.style.display = 'block';
+    }
     
     generateQuestion();
 }
 
 // Função para atualizar o nível exibido
 function updateLevelDisplay() {
-    currentLevelDisplay.textContent = currentLevel;
-    nivelDisplay.textContent = currentLevel;
+    if (currentLevelDisplay) {
+        currentLevelDisplay.textContent = currentLevel;
+    }
+    
+    if (nivelDisplay) {
+        nivelDisplay.textContent = currentLevel;
+    }
 }
 
 // Função para gerar uma nova pergunta
 async function generateQuestion() {
     try {
-        const theme = document.getElementById('theme').value;
-        const difficulty = document.getElementById('difficulty').value;
+        // Mostrar carregamento
+        if (loadingElement) {
+            loadingElement.style.display = 'block';
+        }
         
-        // Mostrar mensagem de carregamento
-        document.getElementById('question-container').innerHTML = '<p>Gerando pergunta, por favor aguarde...</p>';
+        if (questionContent) {
+            questionContent.style.display = 'none';
+        }
         
-        console.log('Enviando requisição para gerar pergunta...');
-        console.log('Tema:', theme);
-        console.log('Dificuldade:', difficulty);
+        if (feedbackElement) {
+            feedbackElement.style.display = 'none';
+        }
         
-        const response = await fetch('/api/generate-questions', {
+        // Resetar estilos dos botões
+        optionBtns.forEach(btn => {
+            if (btn) {
+                btn.disabled = false;
+                btn.className = 'option-btn';
+            }
+        });
+        
+        const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ theme, difficulty }),
+            body: JSON.stringify({
+                theme: currentTema,
+                difficulty: currentLevel
+            }),
         });
         
         console.log('Status da resposta:', response.status);
         
-        // Se a resposta não for bem-sucedida, lançar um erro
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Resposta de erro completa:', errorText);
             throw new Error(`Erro do servidor: ${response.status} ${response.statusText}`);
         }
         
-        // Tentar fazer o parse do JSON com tratamento de erro melhorado
         let data;
         try {
             const textResponse = await response.text();
             console.log('Resposta em texto:', textResponse);
-            
-            // Tentar fazer o parse do JSON
             data = JSON.parse(textResponse);
         } catch (parseError) {
             console.error('Erro ao fazer parse da resposta:', parseError);
             throw new Error(`Erro ao processar resposta: ${parseError.message}`);
         }
         
-        // Verificar se a resposta tem o formato esperado
         if (!data.success || !data.data) {
             console.error('Formato de resposta inválido:', data);
             throw new Error('Formato de resposta inválido');
         }
         
-        const questionData = data.data;
-        displayQuestion(questionData);
+        // Exibir a pergunta
+        currentQuestion = data.data;
+        correctAnswerIndex = currentQuestion.resposta;
+        
+        if (questionText) {
+            questionText.textContent = currentQuestion.pergunta;
+        }
+        
+        optionBtns.forEach((btn, index) => {
+            if (btn) {
+                btn.textContent = currentQuestion.opcoes[index];
+            }
+        });
+        
+        // Esconder carregamento e mostrar conteúdo
+        if (loadingElement) {
+            loadingElement.style.display = 'none';
+        }
+        
+        if (questionContent) {
+            questionContent.style.display = 'block';
+        }
         
     } catch (error) {
         console.error('Erro ao gerar pergunta:', error);
         
-        // Exibir mensagem de erro amigável para o usuário
-        document.getElementById('question-container').innerHTML = `
-            <div class="error-message">
-                <h3>Erro ao gerar pergunta</h3>
-                <p>${error.message}</p>
-                <button onclick="startQuiz()">Tentar novamente</button>
-            </div>
-        `;
+        // Esconder carregamento
+        if (loadingElement) {
+            loadingElement.style.display = 'none';
+        }
+        
+        // Exibir mensagem de erro
+        if (questionContainer) {
+            questionContainer.innerHTML = `
+                <div class="error-message">
+                    <h3>Erro ao gerar pergunta</h3>
+                    <p>${error.message}</p>
+                    <button onclick="startQuiz()">Tentar novamente</button>
+                </div>
+            `;
+        }
     }
 }
 
@@ -132,33 +200,71 @@ async function generateQuestion() {
 function checkAnswer(selectedIndex) {
     // Desabilitar todos os botões
     optionBtns.forEach(btn => {
-        btn.disabled = true;
+        if (btn) {
+            btn.disabled = true;
+        }
     });
     
     // Destacar a resposta correta e a selecionada
-    optionBtns[correctAnswerIndex].classList.add('correct');
+    if (optionBtns[correctAnswerIndex]) {
+        optionBtns[correctAnswerIndex].classList.add('correct');
+    }
     
-    if (selectedIndex !== correctAnswerIndex) {
+    if (selectedIndex !== correctAnswerIndex && optionBtns[selectedIndex]) {
         optionBtns[selectedIndex].classList.add('incorrect');
     }
     
     // Exibir feedback
-    feedbackElement.style.display = 'block';
-    
-    if (selectedIndex === correctAnswerIndex) {
-        // Resposta correta
-        feedbackText.textContent = 'Correto! Você avançou para o próximo nível.';
-        feedbackText.className = 'correct';
-        currentLevel++;
-    } else {
-        // Resposta incorreta
-        feedbackText.textContent = 'Incorreto! Você voltou para o nível 1.';
-        feedbackText.className = 'incorrect';
-        currentLevel = 1;
+    if (feedbackElement) {
+        feedbackElement.style.display = 'block';
     }
     
-    updateLevelDisplay();
+    if (feedbackText) {
+        if (selectedIndex === correctAnswerIndex) {
+            // Resposta correta
+            feedbackText.textContent = 'Correto! Você avançou para o próximo nível.';
+            feedbackText.className = 'correct';
+            currentLevel++;
+            updateLevelDisplay();
+        } else {
+            // Resposta incorreta
+            feedbackText.textContent = 'Incorreto. Tente novamente.';
+            feedbackText.className = 'incorrect';
+        }
+    }
 }
 
-// Inicializar o nível
-updateLevelDisplay();
+// Função para exibir a pergunta
+function displayQuestion(questionData) {
+    if (!questionData) {
+        console.error('Dados da pergunta não fornecidos');
+        return;
+    }
+    
+    currentQuestion = questionData;
+    correctAnswerIndex = currentQuestion.resposta;
+    
+    if (questionText) {
+        questionText.textContent = currentQuestion.pergunta;
+    }
+    
+    optionBtns.forEach((btn, index) => {
+        if (btn && currentQuestion.opcoes[index]) {
+            btn.textContent = currentQuestion.opcoes[index];
+            btn.disabled = false;
+            btn.className = 'option-btn';
+        }
+    });
+    
+    if (loadingElement) {
+        loadingElement.style.display = 'none';
+    }
+    
+    if (questionContent) {
+        questionContent.style.display = 'block';
+    }
+    
+    if (feedbackElement) {
+        feedbackElement.style.display = 'none';
+    }
+}
