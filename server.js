@@ -53,11 +53,11 @@ app.post('/api/generate-questions', async (req, res) => {
       messages: [
         {
           role: 'system',
-          content: 'Você é um assistente de quiz que gera perguntas educacionais. Sempre retorne a resposta em formato JSON válido.'
+          content: 'Você é um assistente de quiz que gera perguntas educacionais. Sempre retorne a resposta em formato JSON válido com as seguintes chaves: "pergunta", "opcoes" (array com 4 opções) e "resposta" (índice da opção correta, 0-3).'
         },
         {
           role: 'user',
-          content: `Crie uma pergunta sobre ${theme} com nível de dificuldade ${difficulty}. A resposta deve ser em formato JSON com as seguintes chaves: 'pergunta', 'opcoes' (array com 4 opções) e 'resposta' (índice da opção correta).`
+          content: `Crie uma pergunta sobre ${theme} com nível de dificuldade ${difficulty} (1-10, onde 1 é muito fácil e 10 é muito difícil). A resposta deve ser em formato JSON com as seguintes chaves: "pergunta", "opcoes" (array com 4 opções) e "resposta" (índice da opção correta, 0-3).`
         }
       ],
       temperature: 0.7,
@@ -77,17 +77,56 @@ app.post('/api/generate-questions', async (req, res) => {
     // Tentar fazer parse do JSON
     let jsonResponse;
     try {
-      // Extrair o JSON da string de resposta
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        jsonResponse = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('Não foi possível extrair JSON da resposta');
+      // Tentar fazer parse diretamente, já que response_format: { type: 'json_object' } deve garantir JSON válido
+      jsonResponse = JSON.parse(content);
+      
+      // Verificar se o JSON tem a estrutura esperada
+      if (!jsonResponse.pergunta || !Array.isArray(jsonResponse.opcoes) || jsonResponse.resposta === undefined) {
+        throw new Error('Formato de resposta inválido');
       }
+      
+      // Garantir que temos 4 opções
+      if (jsonResponse.opcoes.length < 4) {
+        while (jsonResponse.opcoes.length < 4) {
+          jsonResponse.opcoes.push("Opção adicional " + (jsonResponse.opcoes.length + 1));
+        }
+      }
+      
+      // Garantir que o índice da resposta é válido
+      if (jsonResponse.resposta < 0 || jsonResponse.resposta >= jsonResponse.opcoes.length) {
+        jsonResponse.resposta = 0;
+      }
+      
     } catch (parseError) {
       console.error('Erro ao fazer parse da resposta JSON:', parseError);
       console.error('Conteúdo recebido:', content);
-      throw new Error('Erro ao processar a resposta da API');
+      
+      // Tentar extrair JSON da string caso não seja um JSON puro
+      try {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          jsonResponse = JSON.parse(jsonMatch[0]);
+          
+          // Verificar e corrigir a estrutura
+          if (!jsonResponse.pergunta || !Array.isArray(jsonResponse.opcoes) || jsonResponse.resposta === undefined) {
+            throw new Error('Formato de resposta inválido após extração');
+          }
+        } else {
+          throw new Error('Não foi possível extrair JSON da resposta');
+        }
+      } catch (extractError) {
+        // Se falhar completamente, criar uma resposta de fallback
+        jsonResponse = {
+          pergunta: "Não foi possível gerar uma pergunta sobre " + theme,
+          opcoes: [
+            "Tentar novamente",
+            "Escolher outro tema",
+            "Diminuir a dificuldade",
+            "Verificar a conexão"
+          ],
+          resposta: 0
+        };
+      }
     }
     
     // Retornar a resposta processada
