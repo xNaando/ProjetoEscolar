@@ -1,9 +1,15 @@
-const express = require('express');
-const { OpenAI } = require('openai');
-const cors = require('cors');
-const path = require('path');
-require('dotenv').config();
-const { pipeline } = require('@xenova/transformers');
+import express from 'express';
+import { OpenAI } from 'openai';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import dotenv from 'dotenv';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
