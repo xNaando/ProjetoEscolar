@@ -19,8 +19,8 @@ const feedbackElement = document.getElementById('feedback');
 const feedbackText = document.getElementById('feedback-text');
 const nextBtn = document.getElementById('next-btn');
 
-// Configuração da API
-const API_URL = 'http://localhost:3000/api/generate-question';
+// Configuração da API - URL relativa para funcionar tanto localmente quanto na Vercel
+const API_URL = '/api/generate-question';
 
 // Estado do jogo
 let currentLevel = 1;
@@ -98,11 +98,8 @@ async function generateQuestion() {
             }
         }
         
-        // Verificar se recebemos uma pergunta de fallback devido a erro
-        if (data.mockQuestion && data.pergunta) {
-            currentQuestion = data.pergunta;
-            console.log('Usando pergunta de fallback devido a erro na API');
-        } else if (data.choices && data.choices[0] && data.choices[0].message) {
+        // Processar a resposta da API
+        if (data.choices && data.choices[0] && data.choices[0].message) {
             // Resposta normal da API
             const content = data.choices[0].message.content;
             console.log('Conteúdo da resposta:', content);
@@ -111,18 +108,7 @@ async function generateQuestion() {
             let jsonMatch = content.match(/\{[\s\S]*\}/);
             if (!jsonMatch) {
                 console.error('Não foi possível encontrar JSON na resposta');
-                // Criar uma pergunta simples para não interromper o fluxo
-                currentQuestion = {
-                    pergunta: `Pergunta sobre ${currentTema} (nível ${currentLevel})`,
-                    alternativas: [
-                        `Opção 1 sobre ${currentTema}`,
-                        `Opção 2 sobre ${currentTema}`,
-                        `Opção 3 sobre ${currentTema}`,
-                        `Opção 4 sobre ${currentTema}`
-                    ],
-                    indiceCorreta: Math.floor(Math.random() * 4)
-                };
-                return;
+                throw new Error('Não foi possível processar a resposta da API');
             }
             
             try {
@@ -130,32 +116,11 @@ async function generateQuestion() {
                 console.log('Pergunta processada:', currentQuestion);
             } catch (jsonError) {
                 console.error('Erro ao analisar JSON:', jsonError);
-                // Criar uma pergunta simples para não interromper o fluxo
-                currentQuestion = {
-                    pergunta: `Pergunta sobre ${currentTema} (nível ${currentLevel})`,
-                    alternativas: [
-                        `Opção 1 sobre ${currentTema}`,
-                        `Opção 2 sobre ${currentTema}`,
-                        `Opção 3 sobre ${currentTema}`,
-                        `Opção 4 sobre ${currentTema}`
-                    ],
-                    indiceCorreta: Math.floor(Math.random() * 4)
-                };
-                return;
+                throw new Error('Erro ao processar o JSON da resposta da API');
             }
         } else {
             console.error('Formato de resposta inesperado:', data);
-            // Criar uma pergunta simples para não interromper o fluxo
-            currentQuestion = {
-                pergunta: `Pergunta sobre ${currentTema} (nível ${currentLevel})`,
-                alternativas: [
-                    `Opção 1 sobre ${currentTema}`,
-                    `Opção 2 sobre ${currentTema}`,
-                    `Opção 3 sobre ${currentTema}`,
-                    `Opção 4 sobre ${currentTema}`
-                ],
-                indiceCorreta: Math.floor(Math.random() * 4)
-            };
+            throw new Error('Formato de resposta da API inesperado');
         }
         
         // Exibir a pergunta e as alternativas
