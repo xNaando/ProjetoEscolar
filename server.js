@@ -51,14 +51,28 @@ async function generateQuestion(theme, difficulty) {
   
   const response = await axios.post(API_URL, {
     model: 'command',
-    prompt: `Crie uma pergunta de quiz sobre ${theme} com dificuldade ${difficulty} (1-10).
+    prompt: `Você é um professor especialista criando um quiz educacional.
+    Crie uma pergunta interessante e educativa sobre ${theme} com nível de dificuldade ${difficulty} (1-10).
+    A pergunta deve ser clara, objetiva e ter apenas uma resposta correta.
+    
+    Regras:
+    - A pergunta deve ser adequada para o nível de dificuldade
+    - As opções devem ser plausíveis e bem escritas
+    - A resposta correta deve ser inequívoca
+    - Use linguagem apropriada para ambiente educacional
+    
     Retorne apenas um objeto JSON com o seguinte formato:
     {
-      "pergunta": "sua pergunta aqui",
+      "pergunta": "sua pergunta educativa aqui",
       "opcoes": ["opção 1", "opção 2", "opção 3", "opção 4"],
       "resposta": 0
-    }`,
-    max_tokens: 300,
+    }
+    
+    Onde:
+    - pergunta: deve ser clara e direta
+    - opcoes: array com 4 alternativas plausíveis
+    - resposta: índice (0-3) da opção correta`,
+    max_tokens: 500,
     temperature: 0.7,
     k: 0,
     stop_sequences: [],
