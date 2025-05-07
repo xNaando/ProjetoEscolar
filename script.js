@@ -92,6 +92,9 @@ async function generateQuestion() {
         
         if (!response.ok) {
             if (data.error) {
+                console.log('Detalhes do erro:', data.details);
+                console.log('Status code:', data.statusCode);
+                console.log('Dados da resposta do erro:', data.responseData);
                 throw new Error(`Erro na API: ${data.error} - ${data.details || ''}`);
             } else {
                 throw new Error(`Erro na API: ${response.status} ${response.statusText}`);

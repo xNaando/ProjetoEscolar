@@ -60,30 +60,69 @@ app.post('/api/generate-question', async (req, res) => {
     
     console.log('Enviando requisição para OpenRouter...');
     
-    // Chave de API do OpenRouter - usar variável de ambiente ou fallback para a chave direta
-    const apiKey = process.env.OPENROUTER_API_KEY || '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';
+    // Chave de API do OpenRouter - usar variável de ambiente
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    console.log('Usando API key:', apiKey ? 'API key definida' : 'API key não encontrada');
     
-    const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', openRouterPayload, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app',
-        'X-Title': 'Quiz Educacional'
-      }
+    if (!apiKey) {
+      throw new Error('OPENROUTER_API_KEY não definida nas variáveis de ambiente');
+    }
+    
+    console.log('Headers da requisição:', {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer [OCULTO]',
+      'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app',
+      'X-Title': 'Quiz Educacional'
     });
     
+    // Garantindo que a chave API está formatada corretamente
+    const formattedApiKey = apiKey.trim();
+    console.log('Tamanho da API key:', formattedApiKey.length);
+    
+    // Montando os headers corretos conforme documentação do OpenRouter
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${formattedApiKey}`,
+      'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app',
+      'X-Title': 'Quiz Educacional'
+    };
+    
+    console.log('Enviando requisição para URL:', 'https://openrouter.ai/api/v1/chat/completions');
+    console.log('Payload:', JSON.stringify(openRouterPayload).substring(0, 200) + '...');
+    
+    const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', openRouterPayload, { headers });
+    
+    console.log('Status da resposta:', response.status);
+    console.log('Headers da resposta:', JSON.stringify(response.headers));
     console.log('Resposta recebida com sucesso!');
+    console.log('Dados da resposta:', JSON.stringify(response.data).substring(0, 200) + '...');
     
     // Retornar a resposta da API
     return res.json(response.data);
 
   } catch (error) {
-    console.error('Erro na API:', error);
+    console.error('Erro na API:', error.message);
     
-    // Retornar o erro para o cliente
+    // Registrar mais detalhes do erro
+    if (error.response) {
+      // A requisição foi feita e o servidor respondeu com um status de erro
+      console.error('Dados do erro:', JSON.stringify(error.response.data));
+      console.error('Status do erro:', error.response.status);
+      console.error('Headers do erro:', JSON.stringify(error.response.headers));
+    } else if (error.request) {
+      // A requisição foi feita mas não houve resposta
+      console.error('Sem resposta recebida:', error.request);
+    } else {
+      // Algo aconteceu na configuração da requisição que causou o erro
+      console.error('Erro de configuração:', error.message);
+    }
+    
+    // Retornar o erro para o cliente com mais detalhes
     res.status(500).json({ 
       error: 'Erro ao gerar pergunta', 
-      details: error.message
+      details: error.message,
+      statusCode: error.response ? error.response.status : null,
+      responseData: error.response ? error.response.data : null
     });
   }
 });
