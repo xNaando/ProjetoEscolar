@@ -61,23 +61,34 @@ app.post('/api/generate-question', async (req, res) => {
     console.log('Enviando requisição para OpenRouter...');
     
     // Usando a chave API diretamente para garantir que funcione
+    // Usando a chave API diretamente para garantir que funcione
     const apiKey = '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';
     
     console.log('Usando chave API fixa para garantir funcionamento');
     console.log('Tamanho da API key:', apiKey.length);
     
-    console.log('Headers da requisição:', {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer [OCULTO]',
-      'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app'
-    });
+    // Verificando se a chave API começa com 'sk-'
+    if (!apiKey.startsWith('sk-')) {
+      console.error('Formato inválido da chave API');
+      throw new Error('Formato inválido da chave API');
+    }
     
     // Montando os headers exatamente conforme a documentação oficial do OpenRouter
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app'
+      'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app',
+      'X-Title': 'Quiz Educacional',
+      'X-API-KEY': apiKey  // Algumas APIs aceitam isso como alternativa
     };
+    
+    console.log('Headers da requisição:', {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer [OCULTO]',
+      'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app',
+      'X-Title': 'Quiz Educacional',
+      'X-API-KEY': '[OCULTO]'
+    });
     
     console.log('Enviando requisição para URL:', 'https://openrouter.ai/api/v1/chat/completions');
     console.log('Payload:', JSON.stringify(openRouterPayload).substring(0, 200) + '...');
