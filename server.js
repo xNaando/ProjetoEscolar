@@ -27,7 +27,7 @@ app.get('/', (req, res) => {
 
 // Inicializar o cliente OpenAI com configuração para OpenRouter
 const openai = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY || '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',
+  apiKey: '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',
   baseURL: 'https://openrouter.ai/api/v1',
   defaultHeaders: {
     'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app',

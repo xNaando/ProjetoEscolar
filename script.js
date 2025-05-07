@@ -64,91 +64,67 @@ function updateLevelDisplay() {
 
 // Função para gerar uma nova pergunta
 async function generateQuestion() {
-    // Se for a primeira pergunta ou se o jogador acertou a anterior
-    if (currentQuestion === null || currentQuestion.feedback === 'correct') {
-        // Aumentar o nível
-        currentLevel = Math.min(currentLevel + 1, 10);
-        updateLevelDisplay();
-    }
-    
-    // Mostrar loading
-    loadingElement.style.display = 'block';
-    questionContent.style.display = 'none';
-    feedbackElement.style.display = 'none';
-    nextBtn.disabled = true;
-    
     try {
-        // Fazer a requisição para a API
-        const response = await fetch(API_URL, {
+        const theme = document.getElementById('theme').value;
+        const difficulty = document.getElementById('difficulty').value;
+        
+        // Mostrar mensagem de carregamento
+        document.getElementById('question-container').innerHTML = '<p>Gerando pergunta, por favor aguarde...</p>';
+        
+        console.log('Enviando requisição para gerar pergunta...');
+        console.log('Tema:', theme);
+        console.log('Dificuldade:', difficulty);
+        
+        const response = await fetch('/api/generate-questions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                theme: currentTema,
-                difficulty: currentLevel
-            })
+            body: JSON.stringify({ theme, difficulty }),
         });
         
+        console.log('Status da resposta:', response.status);
+        
+        // Se a resposta não for bem-sucedida, lançar um erro
         if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Erro na resposta da API:', errorData);
-            throw new Error(errorData.error || 'Erro ao gerar pergunta');
+            const errorText = await response.text();
+            console.error('Resposta de erro completa:', errorText);
+            throw new Error(`Erro do servidor: ${response.status} ${response.statusText}`);
         }
         
-        const result = await response.json();
-        console.log('Dados recebidos:', result);
-        
-        // Verificar se a resposta contém os dados necessários
-        if (!result.success || !result.data) {
-            console.error('Formato de resposta inválido:', result);
-            throw new Error('Formato de resposta inválido da API');
+        // Tentar fazer o parse do JSON com tratamento de erro melhorado
+        let data;
+        try {
+            const textResponse = await response.text();
+            console.log('Resposta em texto:', textResponse);
+            
+            // Tentar fazer o parse do JSON
+            data = JSON.parse(textResponse);
+        } catch (parseError) {
+            console.error('Erro ao fazer parse da resposta:', parseError);
+            throw new Error(`Erro ao processar resposta: ${parseError.message}`);
         }
         
-        const data = result.data;
-        
-        if (!data.pergunta || !data.opcoes || !Array.isArray(data.opcoes) || 
-            data.resposta === undefined || data.opcoes[data.resposta] === undefined) {
-            console.error('Formato de pergunta inválido:', data);
-            throw new Error('Formato de pergunta inválido retornado pela API');
+        // Verificar se a resposta tem o formato esperado
+        if (!data.success || !data.data) {
+            console.error('Formato de resposta inválido:', data);
+            throw new Error('Formato de resposta inválido');
         }
         
-        // Atualizar a pergunta atual
-        currentQuestion = {
-            pergunta: data.pergunta,
-            alternativas: data.opcoes,
-            respostaCorreta: data.resposta,
-            feedback: ''
-        };
-        
-        // Exibir a pergunta e opções
-        questionText.textContent = currentQuestion.pergunta;
-        
-        // Atualizar os botões de opção
-        optionBtns.forEach((btn, index) => {
-            if (index < currentQuestion.alternativas.length) {
-                btn.textContent = currentQuestion.alternativas[index];
-                btn.dataset.index = index;
-                btn.disabled = false;
-                btn.classList.remove('correct', 'incorrect');
-                btn.style.display = 'block';
-            } else {
-                btn.style.display = 'none';
-            }
-        });
-        
-        // Definir o índice da resposta correta
-        correctAnswerIndex = currentQuestion.respostaCorreta;
-        
-        // Esconder loading e mostrar conteúdo
-        loadingElement.style.display = 'none';
-        questionContent.style.display = 'block';
+        const questionData = data.data;
+        displayQuestion(questionData);
         
     } catch (error) {
         console.error('Erro ao gerar pergunta:', error);
-        questionText.textContent = 'Erro ao gerar pergunta. Tente novamente.';
-        loadingElement.style.display = 'none';
-        questionContent.style.display = 'block';
+        
+        // Exibir mensagem de erro amigável para o usuário
+        document.getElementById('question-container').innerHTML = `
+            <div class="error-message">
+                <h3>Erro ao gerar pergunta</h3>
+                <p>${error.message}</p>
+                <button onclick="startQuiz()">Tentar novamente</button>
+            </div>
+        `;
     }
 }
 
