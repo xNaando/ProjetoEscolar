@@ -236,8 +236,9 @@
             document.getElementById('proxima-btn').style.display = 'none';
             document.getElementById('feedback').textContent = '';
 
-            const prompt = `Gere uma questão em pt-br de múltipla escolha com 4 alternativas e apenas uma correta. O tema da questao é: ${temaAtual}. O nivel de dificuldade da pergunta vai ser: ${niveis[nivelAtual]}.
-Responda no formato JSON: {\n  "pergunta": "...",\n  "alternativas": {\n    "A": "...",\n    "B": "...",\n    "C": "...",\n    "D": "..."\n  },\n  "resposta": "..."\n}`;
+            const prompt = `Gere uma questão em pt-br de múltipla escolha com 4 alternativas e apenas uma correta. 
+            O tema da questao é: ${temaAtual}. O nivel de dificuldade da pergunta vai ser: ${niveis[nivelAtual]}.
+            Responda no formato JSON: {\n  "pergunta": "...",\n  "alternativas": {\n    "A": "...",\n    "B": "...",\n    "C": "...",\n    "D": "..."\n  },\n  "resposta": "..."\n}`;
 
             const response = await fetch('/chat', {
                 method: 'POST',
