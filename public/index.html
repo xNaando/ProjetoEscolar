@@ -212,6 +212,7 @@
         let temaAtual = '';
         let respostaCorreta = '';
         let bloqueado = false;
+        let historicoPerguntas = [];
 
         function iniciarJogo() {
             temaAtual = document.getElementById('tema').value.trim();
@@ -220,6 +221,7 @@
                 return;
             }
             nivelAtual = 0;
+            historicoPerguntas = []; // reseta histórico ao mudar tema
             document.getElementById('nivel').style.display = 'block';
             document.getElementById('nivel').textContent = `Dificuldade: ${niveis[nivelAtual]}`;
             document.getElementById('proxima-btn').style.display = 'none';
@@ -236,11 +238,12 @@
             document.getElementById('proxima-btn').style.display = 'none';
             document.getElementById('feedback').textContent = '';
 
-            const prompt = `Gere uma questão em pt-br de múltipla escolha com 4 alternativas e apenas uma correta. 
-            Não gere perguntas repetidas. 
-            O tema da questao é: ${temaAtual}. 
-            O nivel de dificuldade da pergunta vai ser: ${niveis[nivelAtual]}. 
-            Responda no formato JSON: {\n  "pergunta": "...",\n  "alternativas": {\n    "A": "...",\n    "B": "...",\n    "C": "...",\n    "D": "..."\n  },\n  "resposta": "..."\n}`;
+            let prompt = `Gere uma questão em pt-br de múltipla escolha com 4 alternativas e apenas uma correta.\nO tema da questao é: ${temaAtual}. O nivel de dificuldade da pergunta vai ser: ${niveis[nivelAtual]}.`;
+            if (historicoPerguntas.length > 0) {
+                const perguntasAntigas = historicoPerguntas.map((q, i) => `Pergunta ${i + 1}: ${q.pergunta}`).join('\n');
+                prompt += `\nNão repita nenhuma das perguntas já feitas a seguir:\n${perguntasAntigas}`;
+            }
+            prompt += `\nResponda no formato JSON: {\n  "pergunta": "...",\n  "alternativas": {\n    "A": "...",\n    "B": "...",\n    "C": "...",\n    "D": "..."\n  },\n  "resposta": "..."\n}`;
 
             const response = await fetch('/chat', {
                 method: 'POST',
@@ -284,6 +287,11 @@
                     document.getElementById('quiz-container').appendChild(btn);
                 }
                 return;
+            }
+            // Salva a pergunta recebida no histórico
+            historicoPerguntas.push(obj);
+            if (historicoPerguntas.length > 100) {
+                historicoPerguntas.shift(); // remove a mais antiga
             }
             // Remove botão de tentar novamente se existir
             const btnExistente = document.getElementById('tentar-novamente-btn');
