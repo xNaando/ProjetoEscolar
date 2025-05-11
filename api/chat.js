@@ -4,7 +4,12 @@ export default async function handler(req, res) {
         return;
     }
 
-    const API_KEY = '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'; // sua chave real aqui
+    const API_KEY = process.env.OPENROUTER_API_KEY;
+
+    if (!API_KEY) {
+        res.status(500).json({ error: 'API_KEY não configurada no ambiente.' });
+        return;
+    }
 
     try {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
