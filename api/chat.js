@@ -6,13 +6,6 @@ export default async function handler(req, res) {
 
     const API_KEY = process.env.OPENROUTER_API_KEY;
 
-    // DEBUG: logar no console e retornar na resposta
-    console.log('API_KEY:', API_KEY ? 'PRESENTE' : 'NÃO ENCONTRADA');
-    res.status(200).json({ apiKey: API_KEY });
-    return;
-
-    // --- código original abaixo (comentado para debug) ---
-    /*
     if (!API_KEY) {
         res.status(500).json({ error: 'API_KEY não configurada no ambiente.' });
         return;
@@ -32,5 +25,4 @@ export default async function handler(req, res) {
     } catch (err) {
         res.status(500).json({ error: 'Erro ao se comunicar com OpenRouter.', details: err.message });
     }
-    */
 } 
