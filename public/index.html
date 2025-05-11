@@ -236,7 +236,7 @@
             document.getElementById('feedback').textContent = '';
 
             const idade = nivelAtual * 2 + 8;
-            const prompt = `Gere uma nova questão em pt-br de múltipla escolha com 4 alternativas e apenas uma correta. O tema da questao é: ${temaAtual}. O nivel de dificuldade da pergunta tem que ser para pessoas de ${idade} anos de idade.\nResponda no formato JSON: {\n  "pergunta": "...",\n  "alternativas": {\n    "A": "...",\n    "B": "...",\n    "C": "...",\n    "D": "..."\n  },\n  "resposta": "..."\n}`;
+            const prompt = `Gere uma questão em pt-br de múltipla escolha com 4 alternativas e apenas uma correta. O tema da questao é: ${temaAtual}. O nivel de dificuldade da pergunta tem que ser para pessoas de ${idade} anos de idade.\nResponda no formato JSON: {\n  "pergunta": "...",\n  "alternativas": {\n    "A": "...",\n    "B": "...",\n    "C": "...",\n    "D": "..."\n  },\n  "resposta": "..."\n}`;
 
             const response = await fetch('/chat', {
                 method: 'POST',
