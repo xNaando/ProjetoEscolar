@@ -16,6 +16,8 @@ export default async function handler(req, res) {
         url: 'https://openrouter.ai/api/v1/chat/completions',
         headers: {
             Authorization: `Bearer ${API_KEY}`,
+            'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app/',
+            'X-Title': 'Impulso Escolar',
             'Content-Type': 'application/json'
         },
         body: req.body
@@ -26,6 +28,8 @@ export default async function handler(req, res) {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${API_KEY}`,
+                'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app/',
+                'X-Title': 'Impulso Escolar',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(req.body)
