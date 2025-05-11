@@ -206,11 +206,12 @@
         <button id="proxima-btn" style="display:none;" onclick="proximaPergunta()">Próxima Pergunta</button>
     </div>
     <script>
-        let nivelAtual = 1;
+        // Níveis de dificuldade
+        const niveis = ['muito facil', 'facil', 'medio', 'dificil', 'muito dificil'];
+        let nivelAtual = 0; // começa no "muito facil"
         let temaAtual = '';
         let respostaCorreta = '';
         let bloqueado = false;
-        let totalNiveis = 10;
 
         function iniciarJogo() {
             temaAtual = document.getElementById('tema').value.trim();
@@ -218,9 +219,9 @@
                 alert('Por favor, digite um tema para estudar!');
                 return;
             }
-            nivelAtual = 1;
+            nivelAtual = 0;
             document.getElementById('nivel').style.display = 'block';
-            document.getElementById('nivel').textContent = `Nível ${nivelAtual}`;
+            document.getElementById('nivel').textContent = `Dificuldade: ${niveis[nivelAtual]}`;
             document.getElementById('proxima-btn').style.display = 'none';
             document.getElementById('feedback').textContent = '';
             carregarPergunta();
@@ -231,18 +232,19 @@
             document.getElementById('pergunta').textContent = 'Carregando pergunta...';
             document.getElementById('alternativas').innerHTML = '';
             document.getElementById('nivel').style.display = 'block';
-            document.getElementById('nivel').textContent = `Nível ${nivelAtual}`;
+            document.getElementById('nivel').textContent = `Dificuldade: ${niveis[nivelAtual]}`;
             document.getElementById('proxima-btn').style.display = 'none';
             document.getElementById('feedback').textContent = '';
 
-            const idade = nivelAtual * 2 + 8;
-            const prompt = `Gere uma questão em pt-br de múltipla escolha com 4 alternativas e apenas uma correta. O tema da questao é: ${temaAtual}. O nivel de dificuldade da pergunta tem que ser para pessoas de ${idade} anos de idade.\nResponda no formato JSON: {\n  "pergunta": "...",\n  "alternativas": {\n    "A": "...",\n    "B": "...",\n    "C": "...",\n    "D": "..."\n  },\n  "resposta": "..."\n}`;
+            const prompt = `Gere uma questão em pt-br de múltipla escolha com 4 alternativas e apenas uma correta. O tema da questao é: ${temaAtual}. O nivel de dificuldade da pergunta vai ser: ${niveis[nivelAtual]}.
+Responda no formato JSON: {\n  "pergunta": "...",\n  "alternativas": {\n    "A": "...",\n    "B": "...",\n    "C": "...",\n    "D": "..."\n  },\n  "resposta": "..."\n}`;
 
             const response = await fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.0-flash-exp:free',
+                    model: 'openai/gpt-4o',
+                    max_tokens: 500,
                     messages: [
                         { role: 'user', content: prompt }
                     ]
@@ -305,7 +307,7 @@
                 btn.classList.add('correta');
                 document.getElementById('feedback').textContent = '✅ Resposta correta!';
                 document.getElementById('feedback').style.color = '#166534';
-                nivelAtual = Math.min(totalNiveis, nivelAtual + 1);
+                nivelAtual = Math.min(niveis.length - 1, nivelAtual + 1);
             } else {
                 btn.classList.add('errada');
                 document.getElementById('feedback').textContent = `❌ Resposta errada!`;
@@ -315,8 +317,9 @@
                     const letraBtn = ['A', 'B', 'C', 'D'][idx];
                     if (letraBtn === respostaCorreta) b.classList.add('correta');
                 });
-                nivelAtual = Math.max(1, nivelAtual - 1);
+                nivelAtual = Math.max(0, nivelAtual - 1);
             }
+            document.getElementById('nivel').textContent = `Dificuldade: ${niveis[nivelAtual]}`;
             document.getElementById('proxima-btn').style.display = '';
         }
 
