@@ -11,8 +11,8 @@ export default async function handler(req, res) {
         return;
     }
 
-    // O frontend envia o prompt em req.body.messages[0].content
-    const prompt = req.body.messages && req.body.messages[0] && req.body.messages[0].content;
+    // Agora o frontend envia o prompt em req.body.inputs
+    const prompt = req.body.inputs;
     if (!prompt) {
         res.status(400).json({ error: 'Prompt não fornecido.' });
         return;
