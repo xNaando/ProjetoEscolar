@@ -11,6 +11,16 @@ export default async function handler(req, res) {
         return;
     }
 
+    // LOG: mostrar o que está sendo enviado
+    console.log('Enviando para OpenRouter:', {
+        url: 'https://openrouter.ai/api/v1/chat/completions',
+        headers: {
+            Authorization: `Bearer ${API_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: req.body
+    });
+
     try {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
@@ -21,6 +31,8 @@ export default async function handler(req, res) {
             body: JSON.stringify(req.body)
         });
         const data = await response.json();
+        // LOG: mostrar a resposta recebida
+        console.log('Resposta da OpenRouter:', data);
         res.status(200).json(data);
     } catch (err) {
         res.status(500).json({ error: 'Erro ao se comunicar com OpenRouter.', details: err.message });
