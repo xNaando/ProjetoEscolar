@@ -249,11 +249,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.0-flash-exp:free',
-                    max_tokens: 500,
-                    messages: [
-                        { role: 'user', content: prompt }
-                    ]
+                    inputs: prompt
                 })
             });
             const data = await response.json();

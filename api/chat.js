@@ -4,41 +4,46 @@ export default async function handler(req, res) {
         return;
     }
 
-    const API_KEY = process.env.OPENROUTER_API_KEY;
+    const API_KEY = process.env.API_KEY;
 
     if (!API_KEY) {
         res.status(500).json({ error: 'API_KEY não configurada no ambiente.' });
         return;
     }
 
-    // LOG: mostrar o que está sendo enviado
-    console.log('Enviando para OpenRouter:', {
-        url: 'https://openrouter.ai/api/v1/chat/completions',
-        headers: {
-            Authorization: `Bearer ${API_KEY}`,
-            'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app/',
-            'X-Title': 'Impulso Escolar',
-            'Content-Type': 'application/json'
-        },
-        body: req.body
-    });
+    // O frontend envia o prompt em req.body.messages[0].content
+    const prompt = req.body.messages && req.body.messages[0] && req.body.messages[0].content;
+    if (!prompt) {
+        res.status(400).json({ error: 'Prompt não fornecido.' });
+        return;
+    }
 
     try {
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const response = await fetch('https://api-inference.huggingface.co/models/mrm8488/t5-base-finetuned-question-generation-ap', {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${API_KEY}`,
-                'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app/',
-                'X-Title': 'Impulso Escolar',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(req.body)
+            body: JSON.stringify({ inputs: prompt })
         });
         const data = await response.json();
-        // LOG: mostrar a resposta recebida
-        console.log('Resposta da OpenRouter:', data);
-        res.status(200).json(data);
+        // O modelo retorna um array de objetos com 'generated_text'
+        // Adaptar para o formato esperado pelo frontend
+        if (Array.isArray(data) && data[0] && data[0].generated_text) {
+            res.status(200).json({
+                choices: [
+                    { message: { content: data[0].generated_text } }
+                ]
+            });
+        } else {
+            res.status(200).json({
+                choices: [
+                    { message: { content: JSON.stringify(data) } }
+                ]
+            });
+        }
     } catch (err) {
-        res.status(500).json({ error: 'Erro ao se comunicar com OpenRouter.', details: err.message });
+        res.status(500).json({ error: 'Erro ao se comunicar com Hugging Face.', details: err.message });
     }
 } 
