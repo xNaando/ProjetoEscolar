@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Impulso Escolar</title>
+    <style>
+        body {
+            background: linear-gradient(120deg, #e0e7ff 0%, #f8fafc 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #quiz-container {
+            margin-top: 48px;
+            max-width: 420px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 32px 28px 28px 28px;
+            border: none;
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 4px 32px #0002;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        #tema,
+        #start-btn {
+            margin-bottom: 14px;
+        }
+
+        #tema {
+            padding: 8px 12px;
+            font-size: 1em;
+            border-radius: 6px;
+            border: 1px solid #bfcfff;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        #tema:focus {
+            border: 1.5px solid #6366f1;
+        }
+
+        #start-btn,
+        #proxima-btn {
+            background: #6366f1;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 18px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px #6366f122;
+        }
+
+        #start-btn:hover,
+        #proxima-btn:hover {
+            background: #4f46e5;
+        }
+
+        #nivel {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #6366f1;
+            font-size: 1.1em;
+            display: none;
+        }
+
+        #pergunta {
+            font-size: 1.18em;
+            font-weight: 500;
+            margin-bottom: 18px;
+            color: #22223b;
+            min-height: 48px;
+        }
+
+        .alternativa-btn {
+            display: block;
+            margin: 8px 0;
+            padding: 12px 10px;
+            width: 100%;
+            font-size: 1.08em;
+            border-radius: 7px;
+            border: 1.5px solid #e0e7ff;
+            background: #f3f4f6;
+            color: #22223b;
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s, border 0.2s;
+            text-align: left;
+            font-weight: 400;
+        }
+
+        .alternativa-btn.correta {
+            background: #4caf50;
+            color: #fff;
+            border: 2px solid #388e3c;
+            animation: pulse-green 0.5s;
+        }
+
+        .alternativa-btn.errada {
+            background: #f44336;
+            color: #fff;
+            border: 2px solid #b71c1c;
+            animation: shake 0.4s;
+        }
+
+        .alternativa-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        @keyframes pulse-green {
+            0% {
+                box-shadow: 0 0 0 0 #4caf50;
+            }
+
+            100% {
+                box-shadow: 0 0 10px 5px #4caf5044;
+            }
+        }
+
+        @keyframes shake {
+            0% {
+                transform: translateX(0);
+            }
+
+            20% {
+                transform: translateX(-8px);
+            }
+
+            40% {
+                transform: translateX(8px);
+            }
+
+            60% {
+                transform: translateX(-8px);
+            }
+
+            80% {
+                transform: translateX(8px);
+            }
+
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        #feedback {
+            margin-top: 10px;
+            min-height: 24px;
+            font-size: 1.05em;
+            font-weight: 500;
+            color: #b91c1c;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #feedback:empty {
+            min-height: 0;
+        }
+
+        @media (max-width: 600px) {
+            #quiz-container {
+                padding: 12px 2vw;
+                max-width: 98vw;
+            }
+
+            #pergunta {
+                font-size: 1em;
+            }
+
+            .alternativa-btn {
+                font-size: 0.98em;
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #3730a3;
+            font-size: 2.1em;
+            margin-top: 32px;
+            margin-bottom: 0;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Impulso Escolar</h1>
+    <div id="quiz-container">
+        <input id="tema" type="text" placeholder="Digite o tema para estudar..." />
+        <button id="start-btn" onclick="iniciarJogo()">Iniciar Jogo</button>
+        <div id="nivel"></div>
+        <div id="pergunta"></div>
+        <div id="alternativas"></div>
+        <div id="feedback"></div>
+        <button id="proxima-btn" style="display:none;" onclick="proximaPergunta()">Próxima Pergunta</button>
+    </div>
+    <script>
+        const niveis = ['muito facil', 'facil', 'medio', 'dificil', 'muito dificil'];
+        let nivelAtual = 0;
+        let temaAtual = '';
+        let respostaCorreta = '';
+        let bloqueado = false;
+        let historicoPerguntas = [];
+
+        function iniciarJogo() {
+            temaAtual = document.getElementById('tema').value.trim();
+            if (!temaAtual) {
+                alert('Por favor, digite um tema para estudar!');
+                return;
+            }
+            nivelAtual = 0;
+            historicoPerguntas = [];
+            document.getElementById('nivel').style.display = 'block';
+            document.getElementById('nivel').textContent = `Dificuldade: ${niveis[nivelAtual]}`;
+            document.getElementById('proxima-btn').style.display = 'none';
+            document.getElementById('feedback').textContent = '';
+            carregarPergunta();
+        }
+
+        async function carregarPergunta() {
+            bloqueado = false;
+            document.getElementById('pergunta').textContent = 'Carregando pergunta...';
+            document.getElementById('alternativas').innerHTML = '';
+            document.getElementById('nivel').style.display = 'block';
+            document.getElementById('nivel').textContent = `Dificuldade: ${niveis[nivelAtual]}`;
+            document.getElementById('proxima-btn').style.display = 'none';
+            document.getElementById('feedback').textContent = '';
+
+            let prompt = `Gere uma questão em pt-br de múltipla escolha com 4 alternativas e apenas uma correta.\nO tema da questao é: ${temaAtual}. O nivel de dificuldade da pergunta vai ser: ${niveis[nivelAtual]}.`;
+            if (historicoPerguntas.length > 0) {
+                const perguntasAntigas = historicoPerguntas.map((q, i) => `Pergunta ${i + 1}: ${q.pergunta}`).join('\n');
+                prompt += `\nNão repita nenhuma das perguntas já feitas a seguir:\n${perguntasAntigas}`;
+            }
+            prompt += `\nResponda no formato JSON: {\n  "pergunta": "...",\n  "alternativas": {\n    "A": "...",\n    "B": "...",\n    "C": "...",\n    "D": "..."\n  },\n  "resposta": "..."\n}`;
+
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ inputs: prompt })
+            });
+            const data = await response.json();
+            let conteudo = data.choices && data.choices[0] && data.choices[0].message.content;
+            let obj;
+            try {
+                // Remove blocos de markdown se existirem
+                if (conteudo.startsWith('```json')) {
+                    conteudo = conteudo.replace(/^```json\s*/i, '').replace(/```\s*$/i, '');
+                } else if (conteudo.startsWith('```')) {
+                    conteudo = conteudo.replace(/^```\w*\s*/i, '').replace(/```\s*$/i, '');
+                }
+                obj = JSON.parse(conteudo);
+            } catch (e) {
+                document.getElementById('pergunta').textContent = 'Erro ao gerar questão. Tente novamente.';
+                document.getElementById('alternativas').innerHTML = '';
+                document.getElementById('nivel').style.display = 'block';
+                // Adiciona botão de tentar novamente
+                if (!document.getElementById('tentar-novamente-btn')) {
+                    const btn = document.createElement('button');
+                    btn.id = 'tentar-novamente-btn';
+                    btn.textContent = 'Tentar Novamente';
+                    btn.className = 'alternativa-btn';
+                    btn.style.background = '#6366f1';
+                    btn.style.color = '#fff';
+                    btn.style.marginTop = '12px';
+                    btn.onclick = () => {
+                        btn.remove();
+                        carregarPergunta();
+                    };
+                    document.getElementById('quiz-container').appendChild(btn);
+                }
+                return;
+            }
+            // Salva a pergunta recebida no histórico
+            historicoPerguntas.push(obj);
+            if (historicoPerguntas.length > 100) {
+                historicoPerguntas.shift(); // remove a mais antiga
+            }
+            // Remove botão de tentar novamente se existir
+            const btnExistente = document.getElementById('tentar-novamente-btn');
+            if (btnExistente) btnExistente.remove();
+            respostaCorreta = obj.resposta;
+            document.getElementById('pergunta').textContent = obj.pergunta;
+            const alternativasDiv = document.getElementById('alternativas');
+            alternativasDiv.innerHTML = '';
+            for (const letra of ['A', 'B', 'C', 'D']) {
+                const btn = document.createElement('button');
+                btn.textContent = obj.alternativas[letra];
+                btn.className = 'alternativa-btn';
+                btn.onclick = () => responder(letra, btn);
+                alternativasDiv.appendChild(btn);
+            }
+        }
+
+        function responder(letra, btn) {
+            if (bloqueado) return;
+            bloqueado = true;
+            const botoes = document.querySelectorAll('.alternativa-btn');
+            botoes.forEach(b => b.disabled = true);
+            if (letra === respostaCorreta) {
+                btn.classList.add('correta');
+                document.getElementById('feedback').textContent = '✅ Resposta correta!';
+                document.getElementById('feedback').style.color = '#166534';
+                nivelAtual = Math.min(niveis.length - 1, nivelAtual + 1);
+            } else {
+                btn.classList.add('errada');
+                document.getElementById('feedback').textContent = `❌ Resposta errada!`;
+                document.getElementById('feedback').style.color = '#b91c1c';
+                // Destaca a correta
+                botoes.forEach((b, idx) => {
+                    const letraBtn = ['A', 'B', 'C', 'D'][idx];
+                    if (letraBtn === respostaCorreta) b.classList.add('correta');
+                });
+                nivelAtual = Math.max(0, nivelAtual - 1);
+            }
+            document.getElementById('nivel').textContent = `Dificuldade: ${niveis[nivelAtual]}`;
+            document.getElementById('proxima-btn').style.display = '';
+        }
+
+        function proximaPergunta() {
+            carregarPergunta();
+        }
+    </script>
+</body>
+
+</html>
