@@ -243,6 +243,7 @@
                 const perguntasAntigas = historicoPerguntas.map((q, i) => `Pergunta ${i + 1}: ${q.pergunta}`).join('\n');
                 prompt += `\nNão repita nenhuma das perguntas já feitas a seguir:\n${perguntasAntigas}`;
             }
+            
             prompt += `\nResponda no formato JSON: {\n  "pergunta": "...",\n  "alternativas": {\n    "A": "...",\n    "B": "...",\n    "C": "...",\n    "D": "..."\n  },\n  "resposta": "..."\n}`;
 
             const response = await fetch('/chat', {
