@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const response = await fetch('https://api-inference.huggingface.co/models/mrm8488/t5-base-finetuned-question-generation-ap', {
+        const response = await fetch('https://api-inference.huggingface.co/models/gpt2', {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${API_KEY}`,
@@ -27,7 +27,14 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify({ inputs: prompt })
         });
-        const data = await response.json();
+        let data;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            const text = await response.text();
+            throw new Error(text);
+        }
         // O modelo retorna um array de objetos com 'generated_text'
         // Adaptar para o formato esperado pelo frontend
         if (Array.isArray(data) && data[0] && data[0].generated_text) {
