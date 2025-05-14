@@ -7,6 +7,7 @@ export default async function handler(req, res) {
     const API_KEY = process.env.OPENROUTER_API_KEY;
 
     if (!API_KEY) {
+
         res.status(500).json({ error: 'API_KEY não configurada no ambiente.' });
 
         return;
