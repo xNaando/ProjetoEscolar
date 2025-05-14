@@ -4,54 +4,42 @@ export default async function handler(req, res) {
         return;
     }
 
-    const API_KEY = process.env.API_KEY;
-    
+    const API_KEY = process.env.OPENROUTER_API_KEY;
 
     if (!API_KEY) {
         res.status(500).json({ error: 'API_KEY não configurada no ambiente.' });
+
         return;
     }
 
-    // Agora o frontend envia o prompt em req.body.inputs
-    const prompt = req.body.inputs;
-    if (!prompt) {
-        res.status(400).json({ error: 'Prompt não fornecido.' });
-        return;
-    }
+    // LOG: mostrar o que está sendo enviado
+    console.log('Enviando para OpenRouter:', {
+        url: 'https://openrouter.ai/api/v1/chat/completions',
+        headers: {
+            Authorization: `Bearer ${API_KEY}`,
+            'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app/',
+            'X-Title': 'Impulso Escolar',
+            'Content-Type': 'application/json'
+        },
+        body: req.body
+    });
 
     try {
-        const response = await fetch('https://api-inference.huggingface.co/models/gpt2', {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${API_KEY}`,
+                'HTTP-Referer': 'https://projeto-escolar-eight.vercel.app/',
+                'X-Title': 'Impulso Escolar',
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ inputs: prompt })
+            body: JSON.stringify(req.body)
         });
-        let data;
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            data = await response.json();
-        } else {
-            const text = await response.text();
-            throw new Error(text);
-        }
-        // O modelo retorna um array de objetos com 'generated_text'
-        // Adaptar para o formato esperado pelo frontend
-        if (Array.isArray(data) && data[0] && data[0].generated_text) {
-            res.status(200).json({
-                choices: [
-                    { message: { content: data[0].generated_text } }
-                ]
-            });
-        } else {
-            res.status(200).json({
-                choices: [
-                    { message: { content: JSON.stringify(data) } }
-                ]
-            });
-        }
+        const data = await response.json();
+        // LOG: mostrar a resposta recebida
+        console.log('Resposta da OpenRouter:', data);
+        res.status(200).json(data);
     } catch (err) {
-        res.status(500).json({ error: 'Erro ao se comunicar com Hugging Face.', details: err.message });
+        res.status(500).json({ error: 'Erro ao se comunicar com OpenRouter.', details: err.message });
     }
 } 

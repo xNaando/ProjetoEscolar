@@ -74,6 +74,7 @@
         }
 
         #pergunta {
+
             font-size: 1.18em;
             font-weight: 500;
             margin-bottom: 18px;
@@ -243,14 +244,17 @@
                 const perguntasAntigas = historicoPerguntas.map((q, i) => `Pergunta ${i + 1}: ${q.pergunta}`).join('\n');
                 prompt += `\nNão repita nenhuma das perguntas já feitas a seguir:\n${perguntasAntigas}`;
             }
-            
             prompt += `\nResponda no formato JSON: {\n  "pergunta": "...",\n  "alternativas": {\n    "A": "...",\n    "B": "...",\n    "C": "...",\n    "D": "..."\n  },\n  "resposta": "..."\n}`;
 
             const response = await fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    inputs: prompt
+                    model: 'google/gemini-2.0-flash-exp:free',
+                    max_tokens: 500,
+                    messages: [
+                        { role: 'user', content: prompt }
+                    ]
                 })
             });
             const data = await response.json();
